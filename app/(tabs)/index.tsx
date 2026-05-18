@@ -1,98 +1,183 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ScrollView,
+  SafeAreaView,
+  BackHandler,
+} from "react-native";
+import { ProductCard } from "@/components/ProductCard";
+import { CategoryTabs } from "@/components/CategoryTabs";
+import { fetchCategories, fetchProductsByCategory } from "@/services/firestore";
+import { Category, Product } from "@/types";
+import { Image } from "expo-image";
+import { Leaf } from "lucide-react-native";
+import { Colors } from "@/constants/theme";
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [loading, setLoading] = useState(true);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  // Load categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const cats = await fetchCategories();
+        setCategories(cats);
+        if (cats.length > 0) {
+          setSelectedCategory(cats[0].id);
+        }
+      } catch (error) {
+        console.error("Error loading categories:", error);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  // Load products when category changes
+  useEffect(() => {
+    if (!selectedCategory) return;
+
+    const loadProducts = async () => {
+      setLoading(true);
+      try {
+        const prods = await fetchProductsByCategory(selectedCategory);
+        setProducts(prods);
+      } catch (error) {
+        console.error("Error loading products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [selectedCategory]);
+
+  const handleSelectCategory = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+  };
+
+  return (
+    <SafeAreaView style={styles.header}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.appContainer}>
+          <Image
+            source={require("@/assets/images/banner.png")}
+            style={{
+              opacity: 0.9,
+              justifyContent: "center",
+              width: "100%",
+              height: 150,
+            }}
+          />
+        </View>
+        <Text style={styles.title}>
+          <Leaf style={styles.logo} color="#10B981" size={28} /> SnackBarGTR
+        </Text>
+        <Text style={styles.tagline}>Frais • Durable • Local 🇰🇭</Text>
+
+        {/* Category Tabs */}
+        <CategoryTabs
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={handleSelectCategory}
+        />
+
+        {/* Products Grid */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Our top picks</Text>
+          {loading ? (
+            <Text style={styles.loadingText}>Loading products...</Text>
+          ) : products.length === 0 ? (
+            <Text style={styles.emptyText}>No products available</Text>
+          ) : (
+            <FlatList
+              data={products}
+              renderItem={({ item }) => <ProductCard product={item} />}
+              keyExtractor={(item) => item.id}
+              numColumns={2}
+              scrollEnabled={false}
+              columnWrapperStyle={styles.gridRow}
+            />
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  appContainer: {
+    flex: 1,
+    padding: 20,
   },
-  stepContainer: {
-    gap: 8,
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  description: {
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  btnPrimary: {
+    backgroundColor: "#007AFF",
+    padding: 12,
+    borderRadius: 8,
+  },
+  btnText: {
+    color: "white",
+    textAlign: "center",
+    fontWeight: "bold",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#f8f8f8",
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    backgroundColor: "#fff",
+  },
+  logo: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#1a1a1a",
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  tagline: {
+    fontSize: 14,
+    color: "#666",
+  },
+  section: {
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    marginBottom: 12,
+  },
+  gridRow: {
+    justifyContent: "space-between",
+  },
+  loadingText: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    paddingVertical: 20,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    paddingVertical: 20,
   },
 });

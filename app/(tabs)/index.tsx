@@ -5,16 +5,16 @@ import {
   StyleSheet,
   FlatList,
   ScrollView,
-  SafeAreaView,
-  BackHandler,
+  Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { ProductCard } from "@/components/ProductCard";
 import { CategoryTabs } from "@/components/CategoryTabs";
-import { fetchCategories, fetchProductsByCategory } from "@/services/firestore";
+import { fetchCategories, fetchProductsByCategory } from "@/services/api";
 import { Category, Product } from "@/types";
 import { Image } from "expo-image";
 import { Leaf } from "lucide-react-native";
-import { Colors } from "@/constants/theme";
+import { styles } from "@/constants/styles";
 
 export default function HomeScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -48,6 +48,7 @@ export default function HomeScreen() {
       try {
         const prods = await fetchProductsByCategory(selectedCategory);
         setProducts(prods);
+        console.log("Loaded products for category", selectedCategory, prods);
       } catch (error) {
         console.error("Error loading products:", error);
       } finally {
@@ -63,110 +64,72 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.header}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.appContainer}>
-          <Image
-            source={require("@/assets/images/banner.png")}
-            style={{
-              opacity: 0.9,
-              justifyContent: "center",
-              width: "100%",
-              height: 150,
-            }}
-          />
-        </View>
-        <Text style={styles.title}>
-          <Leaf style={styles.logo} color="#10B981" size={28} /> SnackBarGTR
-        </Text>
-        <Text style={styles.tagline}>Frais • Durable • Local 🇰🇭</Text>
-
-        {/* Category Tabs */}
-        <CategoryTabs
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onSelectCategory={handleSelectCategory}
-        />
-
-        {/* Products Grid */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Our top picks</Text>
-          {loading ? (
-            <Text style={styles.loadingText}>Loading products...</Text>
-          ) : products.length === 0 ? (
-            <Text style={styles.emptyText}>No products available</Text>
-          ) : (
-            <FlatList
-              data={products}
-              renderItem={({ item }) => <ProductCard product={item} />}
-              keyExtractor={(item) => item.id}
-              numColumns={2}
-              scrollEnabled={false}
-              columnWrapperStyle={styles.gridRow}
+    <View style={styles.screenContainer}>
+      <ScrollView showsVerticalScrollIndicator={false} bounces={true}>
+        <SafeAreaView style={{ flex: 1 }}>
+          {/* Banner View */}
+          <View style={styles.headerBanner}>
+            <Image
+              source={require("@/assets/images/banner.png")}
+              style={styles.bannerImage}
             />
-          )}
-        </View>
+            {/* Optional: Add a simple overlay if you want to darken the image slightly for text readability */}
+            <View style={styles.bannerOverlay} />
+
+            {/* Logo & Application Title Row */}
+            <View style={styles.headerTitleRow}>
+              <View style={styles.iconBadgeContainer}>
+                <Leaf className="text-white" size={28} color="#FFFFFF" />
+              </View>
+              <Text style={styles.mainTitleText}>SnackBarGTR</Text>
+            </View>
+
+            {/* Sub-tag Badge */}
+            <View style={styles.subBadge}>
+              <Text style={styles.subBadgeText}>Fresh • Clean • Local 🇰🇭</Text>
+            </View>
+          </View>
+
+          {/* 4. Main White App Content Area (Pulled upward via negative margin) */}
+          <View style={styles.mainContent}>
+            {/* Category Tabs */}
+            <CategoryTabs
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelectCategory={handleSelectCategory}
+            />
+
+            {/* Products Grid */}
+            <View style={style.section}>
+              <Text style={styles.sectionHeading}>Our top picks</Text>
+              {loading ? (
+                <Text style={style.loadingText}>Loading products...</Text>
+              ) : products.length === 0 ? (
+                <Text style={style.emptyText}>No products available</Text>
+              ) : (
+                <FlatList
+                  data={products}
+                  renderItem={({ item }) => <ProductCard product={item} />}
+                  keyExtractor={(item) => item.id}
+                  numColumns={2}
+                  scrollEnabled={false}
+                  columnWrapperStyle={style.gridRow}
+                />
+              )}
+            </View>
+          </View>
+        </SafeAreaView>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  appContainer: {
-    flex: 1,
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  description: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  btnPrimary: {
-    backgroundColor: "#007AFF",
-    padding: 12,
-    borderRadius: 8,
-  },
-  btnText: {
-    color: "white",
-    textAlign: "center",
-    fontWeight: "bold",
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#f8f8f8",
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    backgroundColor: "#fff",
-  },
-  logo: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#1a1a1a",
-    marginBottom: 8,
-  },
-  tagline: {
-    fontSize: 14,
-    color: "#666",
-  },
-  section: {
-    paddingHorizontal: 12,
-    paddingVertical: 16,
-  },
+const style = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "700",
     color: "#1a1a1a",
     marginBottom: 12,
-  },
-  gridRow: {
-    justifyContent: "space-between",
   },
   loadingText: {
     fontSize: 14,
@@ -179,5 +142,12 @@ const styles = StyleSheet.create({
     color: "#999",
     textAlign: "center",
     paddingVertical: 20,
+  },
+  gridRow: {
+    justifyContent: "space-between",
+  },
+  section: {
+    paddingHorizontal: 12,
+    paddingVertical: 16,
   },
 });

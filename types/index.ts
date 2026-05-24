@@ -10,8 +10,8 @@ export interface Product {
 
 export interface Category {
   id: string;
-  name: string;
   label: string;
+  name: string;
 }
 
 // Cart types

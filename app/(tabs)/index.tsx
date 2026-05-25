@@ -65,15 +65,20 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.screenContainer}>
-      <ScrollView showsVerticalScrollIndicator={false} bounces={true}>
-        <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        contentContainerStyle={{ padding: 0 }}
+      >
+        <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
           {/* Banner View */}
           <View style={styles.headerBanner}>
             <Image
               source={require("@/assets/images/banner.png")}
               style={styles.bannerImage}
+              contentFit="cover"
             />
-            {/* Optional: Add a simple overlay if you want to darken the image slightly for text readability */}
+
             <View style={styles.bannerOverlay} />
 
             {/* Logo & Application Title Row */}

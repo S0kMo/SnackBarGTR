@@ -10,14 +10,16 @@ export const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
     backgroundColor: "#F8FAF8",
+    padding: 0,
     // Replaces pb-32 to clear the navigation bar
   },
 
   // Used on the <ScrollView> or <View> wrapping the tab contents
   // Replaces: px-6 -mt-4 relative z-20
   mainContent: {
-    paddingHorizontal: 24,
-    marginTop: 13,
+    borderRadius: 40,
+    paddingHorizontal: 0,
+    marginTop: 4,
     zIndex: 20,
     position: "relative",
   },
@@ -30,20 +32,23 @@ export const styles = StyleSheet.create({
   // Replaces: relative h-56 flex flex-col justify-end p-6 overflow-hidden
   headerBanner: {
     position: "relative",
-    height: 224,
+    height: 220,
     flexDirection: "column",
     justifyContent: "flex-end",
-    padding: 24,
+    padding: 0,
+    marginHorizontal: -8,
     overflow: "hidden",
   },
 
   // Used on the background <Image> inside the header
   // Replaces: w-full h-full object-cover brightness-50
   bannerImage: {
-    width: "100%",
-    height: "100%", // Native translation for object-cover
     position: "absolute",
-    opacity: 0.5, // Replaces brightness-50 since RN doesn't support brightness filters natively
+    left: -8,
+    right: -8,
+    top: 0,
+    bottom: 0,
+    opacity: 1, // use overlay for tinting instead of lowering image opacity
   },
 
   // Used on the <View> creating a fade effect over the image
@@ -54,7 +59,8 @@ export const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    // Note: React Native needs 'expo-linear-gradient' or 'react-native-linear-gradient' for true gradients
+    // simple dark overlay to improve text contrast
+    backgroundColor: "rgba(0,0,0,0.28)",
   },
 
   // Used on the row container holding the Leaf icon and Title text
@@ -63,7 +69,8 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 4,
+    marginBottom: 10,
+    paddingHorizontal: 18,
   },
 
   // Used on the small container box around the Leaf icon
@@ -97,11 +104,13 @@ export const styles = StyleSheet.create({
   subBadge: {
     backgroundColor: "rgba(255, 255, 255, 0.7)", // Replaces bg-white/70
     alignSelf: "flex-start", // Replaces inline-block behavior
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 9999,
+    paddingHorizontal: 0,
+    paddingVertical: 2,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.5)",
+    marginBottom: 8,
+    marginLeft: 18,
   },
 
   // Used on the sub-badge <Text> inside the badge container
@@ -110,6 +119,7 @@ export const styles = StyleSheet.create({
     fontSize: 10,
     color: "#064e3b",
     fontWeight: "700",
+    paddingHorizontal: 18,
   },
 
   // ==========================================
@@ -120,11 +130,10 @@ export const styles = StyleSheet.create({
   // Replaces: flex gap-2 p-1 bg-white/50 backdrop-blur-md rounded-full mb-8 border border-white shadow-sm inline-flex overflow-x-auto no-scrollbar max-w-full
   categoryScrollContainer: {
     flexDirection: "row",
-    padding: 4,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    padding: 6,
+    backgroundColor: "white50",
     borderRadius: 9999,
-    marginBottom: 8,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#FFFFFF",
     alignSelf: "flex-start",
     maxWidth: "100%",
@@ -174,7 +183,7 @@ export const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: 20,
     fontWeight: "900",
-    marginBottom: 24,
+    marginBottom: 8,
     color: "#1e293b",
   },
 

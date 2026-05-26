@@ -1,6 +1,7 @@
-const API_URL = "http://192.168.100.99:5000/api";
+const API_URL =
+  "http://snackbar-backend-elxekxcj3-s0kmos-projects.vercel.app/api";
 
-import { Product, Category, Order, CartItem } from "@/types";
+import { CartItem, Category, Order, Product } from "@/types";
 
 export const fetchCategories = async (): Promise<Category[]> => {
   try {

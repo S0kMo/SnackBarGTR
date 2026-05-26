@@ -7,7 +7,7 @@ import {
   FlatList,
   ActivityIndicator,
 } from "react-native";
-import { fetchUserOrders } from "@/services/firestore";
+import { fetchUserOrders } from "@/services/api";
 import { Order } from "@/types";
 import { formatPrice } from "@/utils/formatPrice";
 import { MaterialCommunityIcons } from "@expo/vector-icons";

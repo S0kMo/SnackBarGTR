@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Category } from "@/types";
+import { styles } from "@/constants/styles";
 
 interface CategoryTabsProps {
   categories: Category[];
@@ -20,46 +21,43 @@ export const CategoryTabs = ({
   onSelectCategory,
 }: CategoryTabsProps) => {
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.container}
-      contentContainerStyle={styles.content}
-    >
-      {categories.map((category) => (
-        <TouchableOpacity
-          key={category.id}
-          style={[
-            styles.tab,
-            selectedCategory === category.id && styles.tabActive,
-          ]}
-          onPress={() => onSelectCategory(category.id)}
-        >
-          <Text
+    <View style={styles.categoryScrollContainer}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {categories.map((category) => (
+          <TouchableOpacity
+            key={category.id}
             style={[
-              styles.tabText,
-              selectedCategory === category.id && styles.tabTextActive,
+              styles.categoryButton,
+              selectedCategory === category.id && styles.categoryButtonActive,
             ]}
+            onPress={() => onSelectCategory(category.id)}
           >
-            {category.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+            <Text
+              style={[
+                styles.categoryText,
+                selectedCategory === category.id && styles.categoryTextActive,
+              ]}
+            >
+              {category.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
+/* 
+const style = StyleSheet.create({
   container: {
-    paddingVertical: 12,
+    paddingVertical: 8,
     paddingHorizontal: 8,
   },
   content: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 13,
   },
   tab: {
     paddingHorizontal: 20,
-    paddingVertical: 10,
     marginHorizontal: 6,
     borderRadius: 20,
     backgroundColor: "#f0f0f0",
@@ -76,6 +74,6 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   tabTextActive: {
-    color: "#fff",
+    color: "#fffff",
   },
-});
+}); */

@@ -10,6 +10,7 @@ import {
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/utils/formatPrice";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { fetchCategories, fetchProductsByCategory } from "@/services/api";
 
 export default function BasketScreen() {
   const { items, total, removeFromCart, updateQuantity } = useCart();

@@ -1,4 +1,4 @@
-const API_URL = "http://192.168.100.99:5000/api";
+const API_URL = "https://snackbar-backend-g4h8.onrender.com/api";
 
 import { Product, Category, Order, CartItem } from "@/types";
 

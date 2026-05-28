@@ -1,241 +1,135 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  FlatList,
-  ActivityIndicator,
-} from "react-native";
-import { fetchUserOrders } from "@/services/api";
-import { Order } from "@/types";
-import { formatPrice } from "@/utils/formatPrice";
+import { styles } from "@/constants/styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
+import React, { useState } from "react";
+import {
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function ProfileScreen() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string>("user123"); // TODO: Get from Telegram/Auth
-
-  useEffect(() => {
-    const loadOrders = async () => {
-      try {
-        setLoading(false);
-        const userOrders = await fetchUserOrders(userId);
-        setOrders(userOrders);
-      } catch (error) {
-        console.error("Error loading orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadOrders();
-  }, [userId]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "#20a653";
-      case "in_progress":
-        return "#ffa500";
-      case "cancelled":
-        return "#ff4444";
-      default:
-        return "#999";
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "in_progress":
-        return "In Progress";
-      case "completed":
-        return "Completed";
-      case "cancelled":
-        return "Cancelled";
-      case "pending":
-      default:
-        return "Pending";
-    }
-  };
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#20a653" style={styles.loader} />
-      </SafeAreaView>
-    );
-  }
+  const [userName, setUserName] = useState("GTR Student");
+  const [selectedProtocol, setSelectedProtocol] = useState("The Network Ninja");
+  const [gtrPoints] = useState(420);
+  const [ecoStatus] = useState("Elite");
 
   return (
-    <SafeAreaView style={styles.container}>
-      {orders.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <MaterialCommunityIcons name="history" size={64} color="#ddd" />
-          <Text style={styles.emptyText}>No orders yet</Text>
-          <Text style={styles.emptySubtext}>
-            Start ordering to see your history!
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={orders}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.orderCard}>
-              <View style={styles.orderHeader}>
-                <View>
-                  <Text style={styles.orderRef}>REF: {item.reference}</Text>
-                  <Text style={styles.orderDate}>
-                    {new Date(item.createdAt).toLocaleDateString()}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    { backgroundColor: getStatusColor(item.status) + "20" },
-                  ]}
+    <SafeAreaView style={styles.screenContainer}>
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingVertical: 24,
+          alignItems: "center",
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Profile Card Container */}
+        <View style={styles.profileCardBody}>
+          {/* Avatar Section */}
+          <View style={styles.avatarOuterFrame}>
+            <View style={styles.avatarInnerWrapper}>
+              <MaterialCommunityIcons
+                name="account"
+                size={64}
+                color="#059669"
+              />
+            </View>
+            <TouchableOpacity style={styles.avatarCameraAction}>
+              <MaterialCommunityIcons name="camera" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+          {/* User Name */}
+          <Text style={styles.profileInputName}>{userName}</Text>
+
+          {/* Protocol Selection */}
+          <View style={styles.inputStackGroup}>
+            <Text style={styles.inputFieldHeading}>PROTOCOL</Text>
+            <View style={styles.nativeSelectContainer}>
+              <Picker
+                selectedValue={selectedProtocol}
+                onValueChange={(itemValue: React.SetStateAction<string>) =>
+                  setSelectedProtocol(itemValue)
+                }
+                style={[styles.nativeSelectContainer]}
+              >
+                {" "}
+                <Picker.Item
+                  label="The Network Ninja"
+                  value="The Network Ninja"
+                />
+                <Picker.Item
+                  label="Community Builder"
+                  value="Community Builder"
+                />
+                <Picker.Item label="Eco Warrior" value="Eco Warrior" />
+              </Picker>
+            </View>
+          </View>
+          {/* Metrics Row */}
+          <View style={styles.metricsSplitFooterRow}>
+            <View style={styles.metricsColumnNode}>
+              <Text style={styles.inputFieldHeading}>GTR POINTS</Text>
+              <Text
+                style={{
+                  fontSize: 32,
+                  fontWeight: "900",
+                  color: "#059669",
+                  marginTop: 12,
+                }}
+              >
+                {gtrPoints}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.metricsColumnNode,
+                { borderLeftWidth: 1, borderLeftColor: "#d9dadb" },
+              ]}
+            >
+              <Text style={styles.inputFieldHeading}>ECO STATUS</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 26,
+                    fontWeight: "900",
+                    color: "#0f172a",
+                    marginTop: 5,
+                    marginLeft: 8,
+                  }}
                 >
-                  <Text
-                    style={[
-                      styles.statusText,
-                      { color: getStatusColor(item.status) },
-                    ]}
-                  >
-                    {getStatusLabel(item.status)}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.orderBody}>
-                <Text style={styles.itemCount}>
-                  {item.items.length} item{item.items.length !== 1 ? "s" : ""}
-                </Text>
-                <Text style={styles.orderTotal}>{formatPrice(item.total)}</Text>
-              </View>
-
-              <View style={styles.orderFooter}>
-                <Text style={styles.paymentMethod}>
-                  {item.paymentMethod === "scan"
-                    ? "💳 Scan & Pay"
-                    : "🚚 Pay on Delivery"}
+                  {ecoStatus}🌿
                 </Text>
               </View>
             </View>
-          )}
-          scrollEnabled={true}
-          contentContainerStyle={styles.listContent}
-        />
-      )}
+          </View>
+        </View>
+
+        {/* Order History Section */}
+        <View style={{ width: "100%", marginTop: 32 }}>
+          <Text style={styles.inputFieldHeading}>ORDER HISTORY</Text>
+          <View style={{ marginTop: 16, paddingHorizontal: 0 }}>
+            <Text
+              style={{
+                fontSize: 14,
+                color: "#94a3b8",
+                textAlign: "center",
+                paddingVertical: 24,
+              }}
+            >
+              No orders yet. Start ordering to see your history!
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8f8f8",
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#1a1a1a",
-  },
-  loader: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1a1a1a",
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: "#999",
-    marginTop: 8,
-  },
-  listContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-  orderCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  orderHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  orderRef: {
-    fontSize: 12,
-    color: "#999",
-    fontWeight: "600",
-    letterSpacing: 1,
-  },
-  orderDate: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1a1a1a",
-    marginTop: 4,
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  orderBody: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-  },
-  itemCount: {
-    fontSize: 13,
-    color: "#666",
-  },
-  orderTotal: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#20a653",
-  },
-  orderFooter: {
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-  },
-  paymentMethod: {
-    fontSize: 13,
-    color: "#666",
-  },
-});

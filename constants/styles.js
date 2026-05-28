@@ -1,4 +1,4 @@
-import { StyleSheet, Platform } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   // ==========================================
@@ -10,7 +10,6 @@ export const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
     backgroundColor: "#F8FAF8",
-    padding: 0,
     // Replaces pb-32 to clear the navigation bar
   },
 
@@ -18,8 +17,8 @@ export const styles = StyleSheet.create({
   // Replaces: px-6 -mt-4 relative z-20
   mainContent: {
     borderRadius: 40,
-    paddingHorizontal: 0,
-    marginTop: 4,
+    paddingHorizontal: 2,
+    marginTop: 12,
     zIndex: 20,
     position: "relative",
   },
@@ -35,7 +34,7 @@ export const styles = StyleSheet.create({
     height: 220,
     flexDirection: "column",
     justifyContent: "flex-end",
-    padding: 0,
+    padding: 1,
     marginHorizontal: -8,
     overflow: "hidden",
   },
@@ -60,7 +59,7 @@ export const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     // simple dark overlay to improve text contrast
-    backgroundColor: "rgba(0,0,0,0.28)",
+    backgroundColor: "rgba(0, 0, 0, 0.28)",
   },
 
   // Used on the row container holding the Leaf icon and Title text
@@ -184,7 +183,7 @@ export const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "900",
     marginBottom: 8,
-    color: "#1e293b",
+    color: "#273244",
   },
 
   // ==========================================
@@ -196,27 +195,30 @@ export const styles = StyleSheet.create({
   productGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 20,
-    marginBottom: 32,
+    justifyContent: "space-evenly",
+    paddingHorizontal: 36,
+    gap: 6,
+    paddingTop: 8,
   },
 
   // Used on the card <View> component itself.
   // Replaces background color via dynamic inline styles (`item.bg`) + rounded-[32px] p-4 flex flex-col items-center relative overflow-hidden
   productCard: {
-    width: "47%", // Replaces web grid-cols-2 to form 2 clean native columns
+    width: "100%", // Replaces web grid-cols-2 to form 2 clean native columns
     borderRadius: 32,
-    padding: 16,
     flexDirection: "column",
     alignItems: "center",
     position: "relative",
     overflow: "hidden",
+    marginBottom: 16,
+    justifyContent: "space-between",
   },
 
   // Used on the image container inside the card
   // Replaces: w-full h-32 mb-4 flex items-center justify-center
   productImageWrapper: {
-    width: "100%",
+    width: "57%",
+    borderRadius: 32,
     height: 128,
     marginBottom: 16,
     alignItems: "center",
@@ -254,7 +256,8 @@ export const styles = StyleSheet.create({
     fontSize: 10,
     color: "#64748b",
     lineHeight: 14,
-    minHeight: 35,
+    minHeight: 28,
+    width: "100%",
   },
 
   // Used on the lower layout row holding price and add button
@@ -264,8 +267,7 @@ export const styles = StyleSheet.create({
     width: "100%",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 8,
-    paddingTop: 4,
+    marginTop: "auto",
   },
 
   // Used on product cost numbers
@@ -333,7 +335,7 @@ export const styles = StyleSheet.create({
   // Used on individual active cart rows
   // Replaces: bg-white rounded-3xl p-4 flex items-center justify-between shadow-sm
   cartItemRow: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#ededef7e",
     borderRadius: 24,
     padding: 16,
     flexDirection: "row",
@@ -366,7 +368,7 @@ export const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    padding: 8,
+    padding: 2,
   },
 
   // Used on item label headers inside the basket listing rows
@@ -414,9 +416,10 @@ export const styles = StyleSheet.create({
   // Replaces: bg-slate-900 text-white p-8 rounded-[40px] mt-4 space-y-4 shadow-xl
   checkoutSummaryCard: {
     backgroundColor: "#0f172a",
-    padding: 32,
+    padding: 24,
     borderRadius: 40,
     marginTop: 16,
+    marginBottom: 8,
     gap: 16,
     ...Platform.select({
       ios: {
@@ -632,7 +635,6 @@ export const styles = StyleSheet.create({
     fontWeight: "900",
     textTransform: "uppercase",
     color: "#94a3b8",
-    marginLeft: 16,
     letterSpacing: 1.5,
   },
 
@@ -640,8 +642,12 @@ export const styles = StyleSheet.create({
   // Replaces: relative wrapper containing w-full bg-[#F1F3F1] border-2 border-transparent rounded-2xl py-4 px-6 font-black text-sm
   nativeSelectContainer: {
     width: "100%",
-    backgroundColor: "#F1F3F1",
+    backgroundColor: "#f1f5f9",
     borderRadius: 16,
+    height: 26,
+    borderWidth: 2,
+    borderColor: "transparent",
+    paddingHorizontal: 16,
   },
 
   // Used directly on React Native's `<Picker>` element

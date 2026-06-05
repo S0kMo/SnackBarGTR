@@ -1,22 +1,57 @@
 import { styles } from "@/constants/styles";
 import { useCart } from "@/context/CartContext";
+import { useTelegram } from "@/context/TelegramContext";
+import { submitOrder } from "@/services/api";
 import { formatPrice } from "@/utils/formatPrice";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import React from "react";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import {
+  FlatList,
+  Text,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Modal, Pressable } from "react-native";
 
 export default function BasketScreen() {
-  const { items, total, removeFromCart, updateQuantity } = useCart();
+  const { items, total, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { user } = useTelegram();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleCheckout = () => {
     if (items.length === 0) {
       alert("Your basket is empty!");
       return;
     }
-    // TODO: Navigate to payment screen
-    alert("Proceeding to checkout...");
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSelect = async (method: string) => {
+    setSelectedPayment(method);
+    setIsProcessing(true);
+
+    try {
+      const userId = user?.id?.toString() || "guest";
+      const result = await submitOrder(items, userId, method);
+
+      if (result.success) {
+        alert(`✓ Order placed successfully!\nOrder ID: ${result.orderId}`);
+        clearCart();
+        setShowPaymentModal(false);
+      } else {
+        alert("Failed to place order. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error processing order:", error);
+      alert("An error occurred. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (items.length === 0) {
@@ -125,6 +160,108 @@ export default function BasketScreen() {
           <Text style={styles.checkoutActionButtonText}>CHECKOUT</Text>
         </TouchableOpacity>
       </View>
+      {/* Payment Method Modal */}
+      <Modal
+        visible={showPaymentModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPaymentModal(false)}
+      >
+        <Pressable
+          style={styles.modalScrimBackdrop}
+          onPress={() => setShowPaymentModal(false)}
+        >
+          <View style={styles.modalSurfaceBody}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: "900",
+                color: "#0f172a",
+                marginBottom: 24,
+              }}
+            >
+              Payment Method
+            </Text>
+
+            {/* Scan & Pay Option */}
+            <TouchableOpacity
+              style={styles.paymentChannelButton}
+              onPress={() => handlePaymentSelect("scan")}
+              disabled={isProcessing}
+            >
+              <View style={styles.paymentChannelIconFrame}>
+                {isProcessing && selectedPayment === "scan" ? (
+                  <ActivityIndicator size="small" color="#0f172a" />
+                ) : (
+                  <MaterialCommunityIcons
+                    name="qrcode"
+                    size={32}
+                    color="#0f172a"
+                  />
+                )}
+              </View>
+              <View>
+                <Text
+                  style={{ fontSize: 18, fontWeight: "700", color: "#0f172a" }}
+                >
+                  Scan & Pay
+                </Text>
+                <Text style={{ fontSize: 14, color: "#94a3b8", marginTop: 4 }}>
+                  Fastest GTR Node link
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Pay on Delivery Option */}
+            <TouchableOpacity
+              style={styles.paymentChannelButton}
+              onPress={() => handlePaymentSelect("delivery")}
+              disabled={isProcessing}
+            >
+              <View style={styles.paymentChannelIconFrame}>
+                {isProcessing && selectedPayment === "delivery" ? (
+                  <ActivityIndicator size="small" color="#0f172a" />
+                ) : (
+                  <MaterialCommunityIcons
+                    name="truck-fast"
+                    size={32}
+                    color="#0f172a"
+                  />
+                )}
+              </View>
+              <View>
+                <Text
+                  style={{ fontSize: 18, fontWeight: "700", color: "#0f172a" }}
+                >
+                  Pay on Delivery
+                </Text>
+                <Text style={{ fontSize: 14, color: "#94a3b8", marginTop: 4 }}>
+                  Cash at the classroom
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              onPress={() => setShowPaymentModal(false)}
+              style={{ marginTop: 16, paddingVertical: 12 }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  color: "#94a3b8",
+                  letterSpacing: 1,
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                }}
+              >
+                CANCEL
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }

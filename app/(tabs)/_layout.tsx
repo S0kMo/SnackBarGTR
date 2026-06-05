@@ -11,7 +11,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: "#fff",
-          marginBottom: 0,
+          marginBottom: 10,
         },
       }}
     >

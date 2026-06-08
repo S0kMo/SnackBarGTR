@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Product, Category, Order, CartItem } from "@/types";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://snackbar-backend-g4h8.onrender.com/api";
 const MENU_CACHE_TTL_MS = 1000 * 60 * 15;
 const CATEGORY_CACHE_KEY = "snackbar_menu_categories_cache";
 const PRODUCT_CACHE_KEY = "snackbar_menu_products_cache";

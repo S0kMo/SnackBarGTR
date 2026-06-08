@@ -616,7 +616,7 @@ export const styles = StyleSheet.create({
     fontWeight: "900",
     textAlign: "center",
     width: "100%",
-    marginBottom: 32,
+    marginBottom: 8,
     color: "#0f172a",
   },
 

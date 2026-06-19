@@ -2,6 +2,46 @@ const API_URL = "https://snackbar-backend-g4h8.onrender.com/api";
 
 import { Product, Category, Order, CartItem } from "@/types";
 
+const API_URL = "http://localhost:5000/api";
+const MENU_CACHE_TTL_MS = 1000 * 60 * 15;
+const CATEGORY_CACHE_KEY = "snackbar_menu_categories_cache";
+const PRODUCT_CACHE_KEY = "snackbar_menu_products_cache";
+
+type CachedMenu<T> = {
+  data: T;
+  savedAt: number;
+};
+
+let categoriesCache: CachedMenu<Category[]> | null = null;
+let productsCache: CachedMenu<Product[]> | null = null;
+
+const isCacheFresh = (savedAt: number) =>
+  Date.now() - savedAt < MENU_CACHE_TTL_MS;
+
+const readCache = async <T>(key: string): Promise<CachedMenu<T> | null> => {
+  try {
+    const raw = await AsyncStorage.getItem(key);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as CachedMenu<T>;
+    if (!parsed || typeof parsed.savedAt !== "number") return null;
+
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const writeCache = async <T>(key: string, data: T) => {
+  const payload: CachedMenu<T> = {
+    data,
+    savedAt: Date.now(),
+  };
+
+  await AsyncStorage.setItem(key, JSON.stringify(payload));
+  return payload;
+};
+
 export interface TelegramUserData {
   firstName: string;
   lastName?: string;

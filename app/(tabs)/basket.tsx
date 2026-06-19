@@ -1,104 +1,65 @@
 import { styles } from "@/constants/styles";
-import { CheckoutModal, OrderReceipt } from "@/components/CheckoutModal";
 import { useCart } from "@/context/CartContext";
-import { useOrderRefresh } from "@/context/OrderRefreshContext";
 import { useTelegram } from "@/context/TelegramContext";
 import { submitOrder } from "@/services/api";
 import { formatPrice } from "@/utils/formatPrice";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  Text,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Modal, Pressable } from "react-native";
 
 export default function BasketScreen() {
-  const router = useRouter();
   const { items, total, removeFromCart, updateQuantity, clearCart } = useCart();
-  const { notifyOrdersUpdated } = useOrderRefresh();
   const { user } = useTelegram();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [orderReceipt, setOrderReceipt] = useState<OrderReceipt | null>(null);
-  const [checkoutError, setCheckoutError] = useState("");
 
   const handleCheckout = () => {
     if (items.length === 0) {
-      setCheckoutError("Your basket is empty.");
-      setShowPaymentModal(true);
+      alert("Your basket is empty!");
       return;
     }
-
-    setCheckoutError("");
-    setOrderReceipt(null);
     setShowPaymentModal(true);
   };
 
   const handlePaymentSelect = async (method: string) => {
     setSelectedPayment(method);
     setIsProcessing(true);
-    setCheckoutError("");
 
     try {
       const userId = user?.id?.toString() || "guest";
-      const orderTotal = total;
       const result = await submitOrder(items, userId, method);
 
       if (result.success) {
-        setOrderReceipt({
-          orderId: result.orderId,
-          paymentMethod: method,
-          total: orderTotal,
-        });
+        alert(`✓ Order placed successfully!\nOrder ID: ${result.orderId}`);
         clearCart();
-        notifyOrdersUpdated();
+        setShowPaymentModal(false);
       } else {
-        setCheckoutError("Failed to place order. Please try again.");
+        alert("Failed to place order. Please try again.");
       }
     } catch (error) {
       console.error("Error processing order:", error);
-      setCheckoutError("An error occurred. Please try again.");
+      alert("An error occurred. Please try again.");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const closeCheckoutModal = () => {
-    if (isProcessing) return;
-
-    setShowPaymentModal(false);
-    setSelectedPayment(null);
-    setCheckoutError("");
-    setOrderReceipt(null);
-  };
-
-  if (items.length === 0 && !showPaymentModal) {
+  if (items.length === 0) {
     return (
       <SafeAreaView style={styles.screenContainer}>
         <View style={styles.emptyCartWrapper}>
           <MaterialCommunityIcons name="shopping" size={64} color="#ddd" />
           <Text style={styles.emptyCartText}>No active cravings yet...</Text>
-          <TouchableOpacity
-            style={{
-              backgroundColor: "#20a653",
-              borderRadius: 14,
-              paddingHorizontal: 22,
-              paddingVertical: 12,
-              marginTop: 18,
-            }}
-            onPress={() => router.push("/")}
-          >
-            <Text
-              style={{
-                color: "#fff",
-                fontSize: 13,
-                fontWeight: "800",
-              }}
-            >
-              BROWSE MENU
-            </Text>
-          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -200,16 +161,107 @@ export default function BasketScreen() {
         </TouchableOpacity>
       </View>
       {/* Payment Method Modal */}
-      <CheckoutModal
+      <Modal
         visible={showPaymentModal}
-        isProcessing={isProcessing}
-        selectedPayment={selectedPayment}
-        checkoutError={checkoutError}
-        orderReceipt={orderReceipt}
-        disablePaymentOptions={items.length === 0}
-        onClose={closeCheckoutModal}
-        onSelectPayment={handlePaymentSelect}
-      />
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPaymentModal(false)}
+      >
+        <Pressable
+          style={styles.modalScrimBackdrop}
+          onPress={() => setShowPaymentModal(false)}
+        >
+          <View style={styles.modalSurfaceBody}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: "900",
+                color: "#0f172a",
+                marginBottom: 24,
+              }}
+            >
+              Payment Method
+            </Text>
+
+            {/* Scan & Pay Option */}
+            <TouchableOpacity
+              style={styles.paymentChannelButton}
+              onPress={() => handlePaymentSelect("scan")}
+              disabled={isProcessing}
+            >
+              <View style={styles.paymentChannelIconFrame}>
+                {isProcessing && selectedPayment === "scan" ? (
+                  <ActivityIndicator size="small" color="#0f172a" />
+                ) : (
+                  <MaterialCommunityIcons
+                    name="qrcode"
+                    size={32}
+                    color="#0f172a"
+                  />
+                )}
+              </View>
+              <View>
+                <Text
+                  style={{ fontSize: 18, fontWeight: "700", color: "#0f172a" }}
+                >
+                  Scan & Pay
+                </Text>
+                <Text style={{ fontSize: 14, color: "#94a3b8", marginTop: 4 }}>
+                  Fastest GTR Node link
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Pay on Delivery Option */}
+            <TouchableOpacity
+              style={styles.paymentChannelButton}
+              onPress={() => handlePaymentSelect("delivery")}
+              disabled={isProcessing}
+            >
+              <View style={styles.paymentChannelIconFrame}>
+                {isProcessing && selectedPayment === "delivery" ? (
+                  <ActivityIndicator size="small" color="#0f172a" />
+                ) : (
+                  <MaterialCommunityIcons
+                    name="truck-fast"
+                    size={32}
+                    color="#0f172a"
+                  />
+                )}
+              </View>
+              <View>
+                <Text
+                  style={{ fontSize: 18, fontWeight: "700", color: "#0f172a" }}
+                >
+                  Pay on Delivery
+                </Text>
+                <Text style={{ fontSize: 14, color: "#94a3b8", marginTop: 4 }}>
+                  Cash at the classroom
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              onPress={() => setShowPaymentModal(false)}
+              style={{ marginTop: 16, paddingVertical: 12 }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  color: "#94a3b8",
+                  letterSpacing: 1,
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                }}
+              >
+                CANCEL
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }

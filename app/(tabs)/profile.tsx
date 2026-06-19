@@ -2,7 +2,7 @@ import { styles } from "@/constants/styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { Image } from "expo-image";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -12,86 +12,47 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useTelegram } from "@/context/TelegramContext";
-import { useOrderRefresh } from "@/context/OrderRefreshContext";
 import { fetchUserOrders } from "@/services/api";
 import { formatPrice } from "@/utils/formatPrice";
 import { Order } from "@/types";
 
 export default function ProfileScreen() {
   const { user, isReady } = useTelegram();
-  const { refreshToken } = useOrderRefresh();
   const [selectedProtocol, setSelectedProtocol] = useState("The Network Ninja");
   const [gtrPoints] = useState(420);
   const [ecoStatus] = useState("Elite");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
-  const [ordersError, setOrdersError] = useState("");
 
-  const loadOrders = useCallback(async () => {
+  useEffect(() => {
+    if (isReady && user) {
+      loadOrders();
+    }
+  }, [isReady, user]);
+
+  const loadOrders = async () => {
     setLoadingOrders(true);
-    setOrdersError("");
     try {
       const userId = user?.id?.toString() || "guest";
       const userOrders = await fetchUserOrders(userId);
       setOrders(userOrders || []);
     } catch (error) {
       console.error("Error loading orders:", error);
-      setOrdersError("Could not load your order history.");
       setOrders([]);
     } finally {
       setLoadingOrders(false);
     }
-  }, [user]);
-
-  useEffect(() => {
-    if (isReady && user) {
-      loadOrders();
-    }
-  }, [isReady, user, refreshToken, loadOrders]);
+  };
 
   if (!isReady) {
     return (
       <SafeAreaView style={styles.screenContainer}>
         <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            paddingHorizontal: 24,
-          }}
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <View
-            style={{
-              width: 88,
-              height: 88,
-              borderRadius: 44,
-              backgroundColor: "#dcfce7",
-              justifyContent: "center",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <ActivityIndicator size="large" color="#20a653" />
-          </View>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "900",
-              color: "#0f172a",
-              textAlign: "center",
-            }}
-          >
-            Loading profile
-          </Text>
-          <Text
-            style={{
-              marginTop: 6,
-              fontSize: 14,
-              color: "#64748b",
-              textAlign: "center",
-            }}
-          >
-            Syncing your SnackBarGTR identity.
+          <MaterialCommunityIcons name="loading" size={48} color="#20a653" />
+          <Text style={{ marginTop: 12, fontSize: 14, color: "#666" }}>
+            Loading...
           </Text>
         </View>
       </SafeAreaView>
@@ -218,103 +179,17 @@ export default function ProfileScreen() {
           <Text style={styles.inputFieldHeading}>ORDER HISTORY</Text>
 
           {loadingOrders ? (
-            <View
-              style={{
-                marginTop: 16,
-                paddingVertical: 24,
-                alignItems: "center",
-                backgroundColor: "#fff",
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: "#e2e8f0",
-              }}
-            >
+            <View style={{ paddingVertical: 24, alignItems: "center" }}>
               <ActivityIndicator size="small" color="#20a653" />
-              <Text style={{ color: "#64748b", fontSize: 13, marginTop: 8 }}>
-                Loading receipts...
-              </Text>
-            </View>
-          ) : ordersError ? (
-            <View
-              style={{
-                marginTop: 16,
-                padding: 18,
-                alignItems: "center",
-                backgroundColor: "#fff",
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: "#fecaca",
-              }}
-            >
-              <MaterialCommunityIcons
-                name="receipt-text-remove"
-                size={36}
-                color="#ef4444"
-              />
-              <Text
-                style={{
-                  fontSize: 15,
-                  fontWeight: "800",
-                  color: "#0f172a",
-                  marginTop: 10,
-                }}
-              >
-                Receipts unavailable
-              </Text>
-              <Text
-                style={{
-                  fontSize: 13,
-                  color: "#64748b",
-                  textAlign: "center",
-                  marginTop: 4,
-                }}
-              >
-                {ordersError}
-              </Text>
-              <TouchableOpacity
-                onPress={loadOrders}
-                style={{
-                  backgroundColor: "#20a653",
-                  borderRadius: 12,
-                  paddingHorizontal: 18,
-                  paddingVertical: 10,
-                  marginTop: 14,
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontSize: 12,
-                    fontWeight: "800",
-                  }}
-                >
-                  TRY AGAIN
-                </Text>
-              </TouchableOpacity>
             </View>
           ) : !orders || orders.length === 0 ? (
-            <View
-              style={{
-                marginTop: 16,
-                padding: 18,
-                alignItems: "center",
-                backgroundColor: "#fff",
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: "#e2e8f0",
-              }}
-            >
-              <MaterialCommunityIcons
-                name="receipt-text"
-                size={36}
-                color="#94a3b8"
-              />
+            <View style={{ marginTop: 16, paddingHorizontal: 0 }}>
               <Text
                 style={{
                   fontSize: 14,
-                  color: "#64748b",
+                  color: "#94a3b8",
                   textAlign: "center",
-                  marginTop: 10,
+                  paddingVertical: 24,
                 }}
               >
                 No orders yet. Start ordering to see your history!
@@ -348,7 +223,7 @@ export default function ProfileScreen() {
                         color: "#0f172a",
                       }}
                     >
-                      Order #{order.reference || order.id?.slice(0, 8) || "N/A"}
+                      Order #{order.id?.slice(0, 8) || "N/A"}
                     </Text>
                     <View
                       style={{

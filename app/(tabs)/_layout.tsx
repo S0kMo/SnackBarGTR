@@ -1,6 +1,8 @@
 import { Tabs } from "expo-router";
-import { Home, ShoppingCart, User } from "lucide-react-native";
 import React from "react";
+import { Home, ShoppingCart, User } from "lucide-react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { styles } from "@/constants/styles";
 
 export default function TabLayout() {
   return (
@@ -11,7 +13,8 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: "#fff",
-          marginBottom: 10,
+          marginBottom: 0,
+          marginTop: 10,
         },
       }}
     >

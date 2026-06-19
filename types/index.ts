@@ -33,9 +33,8 @@ export interface Order {
   total: number;
   paymentMethod: "scan" | "delivery";
   status: "pending" | "in_progress" | "completed" | "cancelled";
-  createdAt?: Date;
-  timestamp?: Date;
-  reference?: string;
+  createdAt: Date;
+  reference: string;
 }
 
 // Firebase types

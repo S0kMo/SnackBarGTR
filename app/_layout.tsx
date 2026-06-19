@@ -9,8 +9,6 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { CartProvider } from "@/context/CartContext";
-import { OrderRefreshProvider } from "@/context/OrderRefreshContext";
-import { TelegramProvider } from "@/context/TelegramContext";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -20,23 +18,17 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <TelegramProvider>
-      <CartProvider>
-        <OrderRefreshProvider>
-          <ThemeProvider
-            value={colorScheme === "light" ? DarkTheme : DefaultTheme}
-          >
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="modal"
-                options={{ presentation: "modal", title: "Modal" }}
-              />
-            </Stack>
-            <StatusBar style="auto" />
-          </ThemeProvider>
-        </OrderRefreshProvider>
-      </CartProvider>
-    </TelegramProvider>
+    <CartProvider>
+      <ThemeProvider value={colorScheme === "light" ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: "modal", title: "Modal" }}
+          />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </CartProvider>
   );
 }

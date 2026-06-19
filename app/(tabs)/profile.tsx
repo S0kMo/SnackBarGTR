@@ -1,449 +1,241 @@
-import { styles } from "@/constants/styles";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Picker } from "@react-native-picker/picker";
-import { Image } from "expo-image";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  SafeAreaView,
-  ScrollView,
-  Text,
-  TouchableOpacity,
   View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  FlatList,
   ActivityIndicator,
 } from "react-native";
-import { useTelegram } from "@/context/TelegramContext";
-import { useOrderRefresh } from "@/context/OrderRefreshContext";
 import { fetchUserOrders } from "@/services/api";
-import { formatPrice } from "@/utils/formatPrice";
 import { Order } from "@/types";
+import { formatPrice } from "@/utils/formatPrice";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function ProfileScreen() {
-  const { user, isReady } = useTelegram();
-  const { refreshToken } = useOrderRefresh();
-  const [selectedProtocol, setSelectedProtocol] = useState("The Network Ninja");
-  const [gtrPoints] = useState(420);
-  const [ecoStatus] = useState("Elite");
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loadingOrders, setLoadingOrders] = useState(false);
-  const [ordersError, setOrdersError] = useState("");
-
-  const loadOrders = useCallback(async () => {
-    setLoadingOrders(true);
-    setOrdersError("");
-    try {
-      const userId = user?.id?.toString() || "guest";
-      const userOrders = await fetchUserOrders(userId);
-      setOrders(userOrders || []);
-    } catch (error) {
-      console.error("Error loading orders:", error);
-      setOrdersError("Could not load your order history.");
-      setOrders([]);
-    } finally {
-      setLoadingOrders(false);
-    }
-  }, [user]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string>("user123"); // TODO: Get from Telegram/Auth
 
   useEffect(() => {
-    if (isReady && user) {
-      loadOrders();
-    }
-  }, [isReady, user, refreshToken, loadOrders]);
+    const loadOrders = async () => {
+      try {
+        setLoading(false);
+        const userOrders = await fetchUserOrders(userId);
+        setOrders(userOrders);
+      } catch (error) {
+        console.error("Error loading orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!isReady) {
+    loadOrders();
+  }, [userId]);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "#20a653";
+      case "in_progress":
+        return "#ffa500";
+      case "cancelled":
+        return "#ff4444";
+      default:
+        return "#999";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "in_progress":
+        return "In Progress";
+      case "completed":
+        return "Completed";
+      case "cancelled":
+        return "Cancelled";
+      case "pending":
+      default:
+        return "Pending";
+    }
+  };
+
+  if (loading) {
     return (
-      <SafeAreaView style={styles.screenContainer}>
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            paddingHorizontal: 24,
-          }}
-        >
-          <View
-            style={{
-              width: 88,
-              height: 88,
-              borderRadius: 44,
-              backgroundColor: "#dcfce7",
-              justifyContent: "center",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <ActivityIndicator size="large" color="#20a653" />
-          </View>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "900",
-              color: "#0f172a",
-              textAlign: "center",
-            }}
-          >
-            Loading profile
-          </Text>
-          <Text
-            style={{
-              marginTop: 6,
-              fontSize: 14,
-              color: "#64748b",
-              textAlign: "center",
-            }}
-          >
-            Syncing your SnackBarGTR identity.
-          </Text>
-        </View>
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#20a653" style={styles.loader} />
       </SafeAreaView>
     );
   }
 
-  const displayName = user
-    ? `${user.firstName}${user.lastName ? " " + user.lastName : ""}`
-    : "GTR Student";
-
   return (
-    <SafeAreaView style={styles.screenContainer}>
-      <ScrollView
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingVertical: 24,
-          alignItems: "center",
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Profile Card Container */}
-        <View style={styles.profileCardBody}>
-          {/* Avatar Section */}
-          <View style={styles.avatarOuterFrame}>
-            <View style={styles.avatarInnerWrapper}>
-              {user?.photoUrl ? (
-                <Image
-                  source={{ uri: user.photoUrl }}
-                  style={{ width: "100%", height: "100%", borderRadius: 64 }}
-                  contentFit="cover"
-                />
-              ) : (
-                <MaterialCommunityIcons
-                  name="account"
-                  size={64}
-                  color="#059669"
-                />
-              )}
-            </View>
-            <TouchableOpacity style={styles.avatarCameraAction}>
-              <MaterialCommunityIcons name="camera" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-          {/* User Name */}
-          <Text style={styles.profileInputName}>{displayName}</Text>
-          {/* Username */}
-          {user?.username && (
-            <Text style={{ fontSize: 14, color: "#94a3b8", marginBottom: 24 }}>
-              @{user.username}
-            </Text>
-          )}
-
-          {/* Protocol Selection */}
-          <View style={styles.inputStackGroup}>
-            <Text style={styles.inputFieldHeading}>PROTOCOL</Text>
-            <View style={styles.nativeSelectContainer}>
-              <Picker
-                selectedValue={selectedProtocol}
-                onValueChange={(itemValue: React.SetStateAction<string>) =>
-                  setSelectedProtocol(itemValue)
-                }
-                style={[styles.nativeSelectContainer]}
-              >
-                {" "}
-                <Picker.Item
-                  label="The Network Ninja"
-                  value="The Network Ninja"
-                />
-                <Picker.Item
-                  label="Community Builder"
-                  value="Community Builder"
-                />
-                <Picker.Item label="Eco Warrior" value="Eco Warrior" />
-              </Picker>
-            </View>
-          </View>
-          {/* Metrics Row */}
-          <View style={styles.metricsSplitFooterRow}>
-            <View style={styles.metricsColumnNode}>
-              <Text style={styles.inputFieldHeading}>GTR POINTS</Text>
-              <Text
-                style={{
-                  fontSize: 32,
-                  fontWeight: "900",
-                  color: "#059669",
-                  marginTop: 12,
-                }}
-              >
-                {gtrPoints}
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.metricsColumnNode,
-                { borderLeftWidth: 1, borderLeftColor: "#d9dadb" },
-              ]}
-            >
-              <Text style={styles.inputFieldHeading}>ECO STATUS</Text>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginTop: 12,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 26,
-                    fontWeight: "900",
-                    color: "#0f172a",
-                    marginTop: 5,
-                    marginLeft: 8,
-                  }}
+    <SafeAreaView style={styles.container}>
+      {orders.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <MaterialCommunityIcons name="history" size={64} color="#ddd" />
+          <Text style={styles.emptyText}>No orders yet</Text>
+          <Text style={styles.emptySubtext}>
+            Start ordering to see your history!
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={orders}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.orderCard}>
+              <View style={styles.orderHeader}>
+                <View>
+                  <Text style={styles.orderRef}>REF: {item.reference}</Text>
+                  <Text style={styles.orderDate}>
+                    {new Date(item.createdAt).toLocaleDateString()}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    { backgroundColor: getStatusColor(item.status) + "20" },
+                  ]}
                 >
-                  {ecoStatus}🌿
+                  <Text
+                    style={[
+                      styles.statusText,
+                      { color: getStatusColor(item.status) },
+                    ]}
+                  >
+                    {getStatusLabel(item.status)}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.orderBody}>
+                <Text style={styles.itemCount}>
+                  {item.items.length} item{item.items.length !== 1 ? "s" : ""}
+                </Text>
+                <Text style={styles.orderTotal}>{formatPrice(item.total)}</Text>
+              </View>
+
+              <View style={styles.orderFooter}>
+                <Text style={styles.paymentMethod}>
+                  {item.paymentMethod === "scan"
+                    ? "💳 Scan & Pay"
+                    : "🚚 Pay on Delivery"}
                 </Text>
               </View>
             </View>
-          </View>
-        </View>
-
-        {/* Order History Section */}
-        <View style={{ width: "100%", marginTop: 32 }}>
-          <Text style={styles.inputFieldHeading}>ORDER HISTORY</Text>
-
-          {loadingOrders ? (
-            <View
-              style={{
-                marginTop: 16,
-                paddingVertical: 24,
-                alignItems: "center",
-                backgroundColor: "#fff",
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: "#e2e8f0",
-              }}
-            >
-              <ActivityIndicator size="small" color="#20a653" />
-              <Text style={{ color: "#64748b", fontSize: 13, marginTop: 8 }}>
-                Loading receipts...
-              </Text>
-            </View>
-          ) : ordersError ? (
-            <View
-              style={{
-                marginTop: 16,
-                padding: 18,
-                alignItems: "center",
-                backgroundColor: "#fff",
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: "#fecaca",
-              }}
-            >
-              <MaterialCommunityIcons
-                name="receipt-text-remove"
-                size={36}
-                color="#ef4444"
-              />
-              <Text
-                style={{
-                  fontSize: 15,
-                  fontWeight: "800",
-                  color: "#0f172a",
-                  marginTop: 10,
-                }}
-              >
-                Receipts unavailable
-              </Text>
-              <Text
-                style={{
-                  fontSize: 13,
-                  color: "#64748b",
-                  textAlign: "center",
-                  marginTop: 4,
-                }}
-              >
-                {ordersError}
-              </Text>
-              <TouchableOpacity
-                onPress={loadOrders}
-                style={{
-                  backgroundColor: "#20a653",
-                  borderRadius: 12,
-                  paddingHorizontal: 18,
-                  paddingVertical: 10,
-                  marginTop: 14,
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontSize: 12,
-                    fontWeight: "800",
-                  }}
-                >
-                  TRY AGAIN
-                </Text>
-              </TouchableOpacity>
-            </View>
-          ) : !orders || orders.length === 0 ? (
-            <View
-              style={{
-                marginTop: 16,
-                padding: 18,
-                alignItems: "center",
-                backgroundColor: "#fff",
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: "#e2e8f0",
-              }}
-            >
-              <MaterialCommunityIcons
-                name="receipt-text"
-                size={36}
-                color="#94a3b8"
-              />
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: "#64748b",
-                  textAlign: "center",
-                  marginTop: 10,
-                }}
-              >
-                No orders yet. Start ordering to see your history!
-              </Text>
-            </View>
-          ) : (
-            <View style={{ marginTop: 16, gap: 12 }}>
-              {orders.map((order) => (
-                <View
-                  key={order.id}
-                  style={{
-                    backgroundColor: "#fff",
-                    borderRadius: 12,
-                    padding: 16,
-                    borderWidth: 1,
-                    borderColor: "#e2e8f0",
-                  }}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: 12,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "700",
-                        color: "#0f172a",
-                      }}
-                    >
-                      Order #{order.reference || order.id?.slice(0, 8) || "N/A"}
-                    </Text>
-                    <View
-                      style={{
-                        backgroundColor:
-                          order.status === "completed"
-                            ? "#dcfce7"
-                            : order.status === "pending"
-                              ? "#fef3c7"
-                              : "#fee2e2",
-                        paddingHorizontal: 10,
-                        paddingVertical: 4,
-                        borderRadius: 6,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          fontWeight: "600",
-                          color:
-                            order.status === "completed"
-                              ? "#16a34a"
-                              : order.status === "pending"
-                                ? "#ca8a04"
-                                : "#dc2626",
-                          textTransform: "capitalize",
-                        }}
-                      >
-                        {order.status || "pending"}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <Text
-                    style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}
-                  >
-                    {(() => {
-                      const dateValue = order.timestamp || order.createdAt;
-                      if (!dateValue) return "N/A";
-                      try {
-                        const date =
-                          typeof dateValue === "string"
-                            ? new Date(dateValue)
-                            : dateValue instanceof Date
-                              ? dateValue
-                              : new Date();
-                        return date.toLocaleDateString();
-                      } catch {
-                        return "N/A";
-                      }
-                    })()}
-                  </Text>
-
-                  <View
-                    style={{
-                      backgroundColor: "#f8fafc",
-                      padding: 8,
-                      borderRadius: 8,
-                      marginBottom: 8,
-                    }}
-                  >
-                    {order.items?.map((item, idx) => (
-                      <Text
-                        key={idx}
-                        style={{ fontSize: 12, color: "#475569" }}
-                      >
-                        {item.quantity}x {item.product?.name || "Item"}
-                      </Text>
-                    ))}
-                  </View>
-
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, color: "#64748b" }}>
-                      Total:
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "700",
-                        color: "#059669",
-                      }}
-                    >
-                      {formatPrice(order.total || 0)}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
           )}
-        </View>
-      </ScrollView>
+          scrollEnabled={true}
+          contentContainerStyle={styles.listContent}
+        />
+      )}
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f8f8f8",
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1a1a1a",
+  },
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#999",
+    marginTop: 8,
+  },
+  listContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  orderCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  orderHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  orderRef: {
+    fontSize: 12,
+    color: "#999",
+    fontWeight: "600",
+    letterSpacing: 1,
+  },
+  orderDate: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginTop: 4,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  orderBody: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+  },
+  itemCount: {
+    fontSize: 13,
+    color: "#666",
+  },
+  orderTotal: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#20a653",
+  },
+  orderFooter: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+  },
+  paymentMethod: {
+    fontSize: 13,
+    color: "#666",
+  },
+});

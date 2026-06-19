@@ -1,8 +1,14 @@
 import { Tabs } from "expo-router";
-import { Home, ShoppingCart, User } from "lucide-react-native";
+import { Home, ShoppingBasket, User } from "lucide-react-native";
 import React from "react";
+import { View } from "react-native";
+import { styles } from "@/constants/styles";
+import { useCart } from "@/context/CartContext";
 
 export default function TabLayout() {
+  const { items } = useCart();
+  const hasCartItems = items.length > 0;
+
   return (
     <Tabs
       screenOptions={{
@@ -11,7 +17,10 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: "#fff",
-          marginBottom: 10,
+          borderTopWidth: 1,
+          borderTopColor: "#e5e7eb",
+          elevation: 0,
+          shadowOpacity: 0,
         },
       }}
     >
@@ -27,7 +36,10 @@ export default function TabLayout() {
         options={{
           title: "Basket",
           tabBarIcon: ({ color, size }) => (
-            <ShoppingCart color={color} size={28} />
+            <View style={{ position: "relative" }}>
+              <ShoppingBasket color={color} size={30} />
+              {hasCartItems && <View style={styles.tabBarNotificationDot} />}
+            </View>
           ),
         }}
       />

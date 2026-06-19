@@ -143,7 +143,7 @@ export const submitOrder = async (
   cartItems: CartItem[],
   userId: string,
   paymentMethod: string = "cash",
-): Promise<{ success: boolean; orderId: string }> => {
+): Promise<{ success: boolean; orderId: string; reference?: string }> => {
   try {
     const total = cartItems.reduce(
       (sum, item) => sum + item.product.price * item.quantity,
@@ -162,7 +162,11 @@ export const submitOrder = async (
     });
 
     const data = await response.json();
-    return { success: data.success, orderId: data.orderId };
+    return {
+      success: data.success,
+      orderId: data.orderId,
+      reference: data.reference,
+    };
   } catch (error) {
     console.error("Error submitting order:", error);
     return { success: false, orderId: "" };

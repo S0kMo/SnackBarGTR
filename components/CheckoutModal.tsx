@@ -13,6 +13,7 @@ import {
 
 export type OrderReceipt = {
   orderId: string;
+  reference?: string;
   paymentMethod: string;
   total: number;
 };
@@ -118,7 +119,7 @@ export const CheckoutModal = ({
                       fontWeight: "700",
                     }}
                   >
-                    #{orderReceipt.orderId.slice(0, 8)}
+                    #{orderReceipt.reference || orderReceipt.orderId.slice(0, 8)}
                   </Text>
                 </View>
                 <View

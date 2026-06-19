@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useTelegram } from "@/context/TelegramContext";
 import { useOrderRefresh } from "@/context/OrderRefreshContext";
-import { fetchUserOrders } from "@/services/api";
+import { fetchUserOrders, fetchUser, updateUserProfile } from "@/services/api";
 import { formatPrice } from "@/utils/formatPrice";
 import { Order } from "@/types";
 
@@ -21,18 +21,39 @@ export default function ProfileScreen() {
   const { user, isReady } = useTelegram();
   const { refreshToken } = useOrderRefresh();
   const [selectedProtocol, setSelectedProtocol] = useState("The Network Ninja");
-  const [gtrPoints] = useState(420);
-  const [ecoStatus] = useState("Elite");
+  const [gtrPoints, setGtrPoints] = useState(0);
+  const [ecoStatus, setEcoStatus] = useState("New");
+  const [loadingProfile, setLoadingProfile] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [ordersError, setOrdersError] = useState("");
+  const [savingProtocol, setSavingProtocol] = useState(false);
+
+  const loadProfile = useCallback(async () => {
+    if (!user) return;
+
+    setLoadingProfile(true);
+    try {
+      const profile = await fetchUser(user.id);
+      if (profile) {
+        setGtrPoints(profile.gtrPoints ?? 0);
+        setEcoStatus(profile.ecoStatus || "New");
+        setSelectedProtocol(profile.protocol || "The Network Ninja");
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+    } finally {
+      setLoadingProfile(false);
+    }
+  }, [user]);
 
   const loadOrders = useCallback(async () => {
     setLoadingOrders(true);
     setOrdersError("");
     try {
-      const userId = user?.id?.toString() || "guest";
-      const userOrders = await fetchUserOrders(userId);
+      if (!user) return;
+
+      const userOrders = await fetchUserOrders(user.id.toString());
       setOrders(userOrders || []);
     } catch (error) {
       console.error("Error loading orders:", error);
@@ -45,9 +66,10 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     if (isReady && user) {
+      loadProfile();
       loadOrders();
     }
-  }, [isReady, user, refreshToken, loadOrders]);
+  }, [isReady, user, refreshToken, loadProfile, loadOrders]);
 
   if (!isReady) {
     return (
@@ -98,9 +120,79 @@ export default function ProfileScreen() {
     );
   }
 
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.screenContainer}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingHorizontal: 24,
+          }}
+        >
+          <View
+            style={{
+              width: 88,
+              height: 88,
+              borderRadius: 44,
+              backgroundColor: "#fee2e2",
+              justifyContent: "center",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <MaterialCommunityIcons
+              name="cellphone-link"
+              size={44}
+              color="#ef4444"
+            />
+          </View>
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "900",
+              color: "#0f172a",
+              textAlign: "center",
+            }}
+          >
+            Telegram required
+          </Text>
+          <Text
+            style={{
+              marginTop: 6,
+              fontSize: 14,
+              color: "#64748b",
+              textAlign: "center",
+            }}
+          >
+            Open SnackBarGTR from Telegram to sync profile and order history.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const displayName = user
     ? `${user.firstName}${user.lastName ? " " + user.lastName : ""}`
     : "GTR Student";
+  const handleProtocolChange = async (protocol: string) => {
+    setSelectedProtocol(protocol);
+
+    if (!user) return;
+
+    setSavingProtocol(true);
+    try {
+      const success = await updateUserProfile(user.id, { protocol });
+      if (!success) {
+        console.error("Failed to update protocol");
+      }
+    } catch (error) {
+      console.error("Error updating protocol:", error);
+    } finally {
+      setSavingProtocol(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.screenContainer}>
@@ -150,12 +242,11 @@ export default function ProfileScreen() {
             <View style={styles.nativeSelectContainer}>
               <Picker
                 selectedValue={selectedProtocol}
-                onValueChange={(itemValue: React.SetStateAction<string>) =>
-                  setSelectedProtocol(itemValue)
+                onValueChange={(itemValue) =>
+                  handleProtocolChange(String(itemValue))
                 }
                 style={[styles.nativeSelectContainer]}
               >
-                {" "}
                 <Picker.Item
                   label="The Network Ninja"
                   value="The Network Ninja"
@@ -167,6 +258,16 @@ export default function ProfileScreen() {
                 <Picker.Item label="Eco Warrior" value="Eco Warrior" />
               </Picker>
             </View>
+            {savingProtocol && (
+              <Text style={{ fontSize: 12, color: "#94a3b8", marginTop: 6 }}>
+                Saving protocol...
+              </Text>
+            )}
+            {loadingProfile && (
+              <Text style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8 }}>
+                Syncing profile...
+              </Text>
+            )}
           </View>
           {/* Metrics Row */}
           <View style={styles.metricsSplitFooterRow}>

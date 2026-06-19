@@ -195,9 +195,9 @@ export const styles = StyleSheet.create({
   productGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-evenly",
-    paddingHorizontal: 36,
-    gap: 6,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    columnGap: 12,
     paddingTop: 8,
   },
 
@@ -340,7 +340,8 @@ export const styles = StyleSheet.create({
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: 14,
+    minHeight: 126,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -357,34 +358,50 @@ export const styles = StyleSheet.create({
   cartItemLeftSide: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    gap: 12,
+    flex: 1,
+    minWidth: 0,
   },
 
   // Used on the image frame boundaries inside basket card item list blocks
   // Replaces dynamic background color (`item.bg`) + w-16 h-16 rounded-2xl flex items-center justify-center p-2
   cartItemImageFrame: {
-    width: 64,
-    height: 64,
+    width: 84,
+    height: 84,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
     padding: 2,
   },
 
+  cartItemDetails: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: "center",
+  },
+
   // Used on item label headers inside the basket listing rows
   // Replaces: font-black text-sm
   cartItemTitle: {
     fontWeight: "900",
-    fontSize: 14,
+    fontSize: 17,
     color: "#0f172a",
+    flexShrink: 1,
+    lineHeight: 20,
   },
 
   // Used on item costing labels inside basket listing rows
   // Replaces: text-xs text-emerald-600 font-bold
   cartItemCost: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#059669",
     fontWeight: "700",
+    marginTop: 2,
+  },
+
+  cartItemControlRow: {
+    marginTop: 10,
+    alignItems: "flex-start",
   },
 
   // Used on quantitative controllers right hand side action docks
@@ -392,11 +409,27 @@ export const styles = StyleSheet.create({
   quantityControlBox: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
     backgroundColor: "#f8fafc",
     borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 7,
+    flexShrink: 0,
+    width: 164,
+    justifyContent: "space-between",
+  },
+
+  quantityActionButton: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  quantityActionText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#20a653",
+    lineHeight: 18,
   },
 
   // Used on numerical counters tracking volume within selectors
@@ -415,11 +448,15 @@ export const styles = StyleSheet.create({
   // Used on the dark lower summarizing dashboard box component
   // Replaces: bg-slate-900 text-white p-8 rounded-[40px] mt-4 space-y-4 shadow-xl
   checkoutSummaryCard: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "#0f172a",
     padding: 24,
-    borderRadius: 40,
-    marginTop: 16,
-    marginBottom: 8,
+    paddingBottom: 30,
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
     gap: 16,
     ...Platform.select({
       ios: {
@@ -766,8 +803,8 @@ export const styles = StyleSheet.create({
   // Replaces: absolute -top-1 -right-1 bg-emerald-500 w-3 h-3 rounded-full border-2 border-white
   tabBarNotificationDot: {
     position: "absolute",
-    top: 20,
-    right: -2,
+    top: -2,
+    right: -4,
     backgroundColor: "#10b981",
     width: 12,
     height: 12,

@@ -12,11 +12,15 @@ export interface TelegramUser {
 interface TelegramContextType {
   user: TelegramUser | null;
   isReady: boolean;
+  isTelegramEnvironment: boolean;
+  isDevelopmentMock: boolean;
 }
 
 const TelegramContext = createContext<TelegramContextType>({
   user: null,
   isReady: false,
+  isTelegramEnvironment: false,
+  isDevelopmentMock: false,
 });
 
 export const useTelegram = () => {
@@ -34,11 +38,15 @@ export const TelegramProvider = ({
 }) => {
   const [user, setUser] = useState<TelegramUser | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [isTelegramEnvironment, setIsTelegramEnvironment] = useState(false);
+  const [isDevelopmentMock, setIsDevelopmentMock] = useState(false);
 
   useEffect(() => {
     const initTelegram = async () => {
       // Check if we're in Telegram Web App environment
       if (typeof window !== "undefined" && window.Telegram?.WebApp) {
+        setIsTelegramEnvironment(true);
+        setIsDevelopmentMock(false);
         const webApp = window.Telegram.WebApp;
 
         // Expand the app to full screen
@@ -75,9 +83,11 @@ export const TelegramProvider = ({
         }
 
         setIsReady(true);
-      } else {
+      } else if (__DEV__) {
         // Fallback for non-Telegram environments (development)
         console.warn("Not in Telegram Web App environment");
+        setIsTelegramEnvironment(false);
+        setIsDevelopmentMock(true);
         const mockUser: TelegramUser = {
           id: 123456789,
           firstName: "GTR",
@@ -101,6 +111,12 @@ export const TelegramProvider = ({
         }
 
         setIsReady(true);
+      } else {
+        console.warn("Telegram Web App environment unavailable");
+        setIsTelegramEnvironment(false);
+        setIsDevelopmentMock(false);
+        setUser(null);
+        setIsReady(true);
       }
     };
 
@@ -108,7 +124,9 @@ export const TelegramProvider = ({
   }, []);
 
   return (
-    <TelegramContext.Provider value={{ user, isReady }}>
+    <TelegramContext.Provider
+      value={{ user, isReady, isTelegramEnvironment, isDevelopmentMock }}
+    >
       {children}
     </TelegramContext.Provider>
   );

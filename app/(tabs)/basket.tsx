@@ -1,4 +1,5 @@
 import { styles } from "@/constants/styles";
+import { CartItemCard } from "@/components/CartItemCard";
 import { CheckoutModal, OrderReceipt } from "@/components/CheckoutModal";
 import { useCart } from "@/context/CartContext";
 import { useOrderRefresh } from "@/context/OrderRefreshContext";
@@ -6,7 +7,6 @@ import { useTelegram } from "@/context/TelegramContext";
 import { submitOrder } from "@/services/api";
 import { formatPrice } from "@/utils/formatPrice";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
@@ -30,6 +30,12 @@ export default function BasketScreen() {
       return;
     }
 
+    if (!user) {
+      setCheckoutError("Open SnackBarGTR in Telegram to place orders.");
+      setShowPaymentModal(true);
+      return;
+    }
+
     setCheckoutError("");
     setOrderReceipt(null);
     setShowPaymentModal(true);
@@ -41,13 +47,19 @@ export default function BasketScreen() {
     setCheckoutError("");
 
     try {
-      const userId = user?.id?.toString() || "guest";
+      if (!user) {
+        setCheckoutError("Open SnackBarGTR in Telegram to place orders.");
+        return;
+      }
+
+      const userId = user.id.toString();
       const orderTotal = total;
       const result = await submitOrder(items, userId, method);
 
       if (result.success) {
         setOrderReceipt({
           orderId: result.orderId,
+          reference: result.reference,
           paymentMethod: method,
           total: orderTotal,
         });
@@ -110,75 +122,11 @@ export default function BasketScreen() {
         data={items}
         keyExtractor={(item) => item.product.id}
         renderItem={({ item }) => (
-          <View style={styles.cartItemRow}>
-            <View style={styles.cartItemLeftSide}>
-              <View
-                style={[
-                  styles.cartItemImageFrame,
-                  { backgroundColor: "#f0f0f0" },
-                ]}
-              >
-                {item.product.image ? (
-                  <Image
-                    source={{ uri: item.product.image }}
-                    style={{ width: "100%", height: "100%", borderRadius: 12 }}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <MaterialCommunityIcons
-                    name="image-off"
-                    size={24}
-                    color="#999"
-                  />
-                )}
-              </View>
-              <View>
-                <Text style={styles.cartItemTitle}>{item.product.name}</Text>
-                <Text style={styles.cartItemCost}>
-                  {formatPrice(item.product.price)}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.quantityControlBox}>
-              <TouchableOpacity
-                onPress={() =>
-                  updateQuantity(
-                    item.product.id,
-                    Math.max(1, item.quantity - 1),
-                  )
-                }
-              >
-                <Text
-                  style={{ fontSize: 16, fontWeight: "600", color: "#20a653" }}
-                >
-                  −
-                </Text>
-              </TouchableOpacity>
-
-              <Text style={styles.quantityValueText}>{item.quantity}</Text>
-
-              <TouchableOpacity
-                onPress={() =>
-                  updateQuantity(item.product.id, item.quantity + 1)
-                }
-              >
-                <Text
-                  style={{ fontSize: 16, fontWeight: "600", color: "#20a653" }}
-                >
-                  +
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => removeFromCart(item.product.id)}>
-                <MaterialCommunityIcons
-                  name="trash-can"
-                  size={18}
-                  color="#ff4444"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <CartItemCard
+            item={item}
+            onUpdateQuantity={updateQuantity}
+            onRemove={removeFromCart}
+          />
         )}
         scrollEnabled={true}
         contentContainerStyle={[
